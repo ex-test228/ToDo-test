@@ -1,0 +1,69 @@
+body {
+  font-family: sans-serif;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  position: relative;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.completed {
+  text-decoration: line-through;
+  font-style: italic;
+  color: #888;
+}
+
+.edit-input-container {
+  position: absolute; /* 親要素（table）に対して絶対配置 */
+  display: none;     /* 初期状態では非表示 */
+  z-index: 1000;     /* 他の要素より手前に表示 */
+  background-color: white; /* 入力エリアの背景色 */
+  border: 1px solid blue; /* 枠線 */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* 影 */
+  padding: 5px;
+  box-sizing: border-box; /* paddingやborderをwidth/heightに含める */
+  display: flex; /* Flexboxで要素を並べる */
+  flex-direction: column; /* 縦方向に並べる */
+  justify-content: space-between; /* 上下均等に配置 */
+}
+
+.edit-input-container textarea {
+  width: 100%;
+  /* height: 100%; */ /* ボタンがあるため高さは調整 */
+  min-height: 30px; /* 最小の高さ */
+  flex-grow: 1; /* 余白を埋める */
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  resize: none; /* リサイズを無効にする */
+  font-size: inherit; /* 親要素のフォントサイズを継承 */
+  padding: 5px;
+}
+
+.edit-input-container .buttons {
+    display: flex;
+    justify-content: flex-end; /* ボタンを右寄せ */
+    gap: 5px; /* ボタン間のスペース */
+    margin-top: 5px;
+}
+
+.edit-input-container button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
