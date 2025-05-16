@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToDo sample</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+  </style>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      position: relative;
+    }
+  
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+  
+    .completed {
+      text-decoration: line-through;
+      font-style: italic;
+      color: #888;
+    }
+
+    .edit-input-container {
+      position: absolute; /* 親要素（table）に対して絶対配置 */
+      display: none;     /* 初期状態では非表示 */
+      z-index: 1000;     /* 他の要素より手前に表示 */
+      background-color: white; /* 入力エリアの背景色 */
+      border: 1px solid blue; /* 枠線 */
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* 影 */
+      padding: 5px;
+      box-sizing: border-box; /* paddingやborderをwidth/heightに含める */
+      display: flex; /* Flexboxで要素を並べる */
+      flex-direction: column; /* 縦方向に並べる */
+      justify-content: space-between; /* 上下均等に配置 */
+    }
+
+    .edit-input-container textarea {
+      width: 100%;
+      /* height: 100%; */ /* ボタンがあるため高さは調整 */
+      min-height: 30px; /* 最小の高さ */
+      flex-grow: 1; /* 余白を埋める */
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      resize: none; /* リサイズを無効にする */
+      font-size: inherit; /* 親要素のフォントサイズを継承 */
+      padding: 5px;
+    }
+
+    .edit-input-container .buttons {
+        display: flex;
+        justify-content: flex-end; /* ボタンを右寄せ */
+        gap: 5px; /* ボタン間のスペース */
+        margin-top: 5px;
+    }
+
+    .edit-input-container button {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>TODO リスト</h1>
+
+  <h2>新しい TODO を追加</h2>
+  <input type="text" id="new-task">
+  <button id="task-add-button">追加</button>
+
+  <table id="todo-table">
+
+    <thead>
+      <tr>
+        <th>タスク名</th>
+        <th>登録日</th>
+        <th>完了</th>
+        <th>削除</th>
+      </tr>
+    </thead>
+    <tbody id="todo-body">
+      </tbody>
+  </table>
+
+  <section>
+    <h2>状態表示</h2>
+    <p id="state-message">待機中・・・</p>
+  </section>
+
+  {% if session['user_id'] %}
+  <p>{{ session['user_id'] }}</p>
+  {% endif %}
+
+  <!-- <script>
+    function addTodo() {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString();
+
+      const newTaskInput = document.getElementById('new-task');
+      const task = newTaskInput.value.trim();
+      if (task) {
+        fetch('/api/todos/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ task: task ,date: formattedDate})
+        })
+          .then(response => response.json())
+          .then(data => {
+            newTaskInput.value = '';
+            fetchTodos()
+          });
+      }
+    }
+
+    const todoBody = document.getElementById('todo-body');
+
+  // サーバーからToDoデータを取得する関数
+  async function fetchTodos() {
+    try {
+      const response = await fetch('/api/todos/get'); // サーバーのエンドポイント
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const todos = await response.json();
+      displayTodos(todos);
+    } catch (error) {
+      console.error('ToDoデータの取得に失敗しました:', error);
+      // エラー処理（例：エラーメッセージを表示）
+    }
+  }
+
+  // 取得したToDoデータをテーブルに表示する関数
+  function displayTodos(todos) {
+    todoBody.innerHTML = ''; // 既存のデータをクリア
+
+    todos.forEach(todo => {
+      const row = todoBody.insertRow();
+
+      // タスク名
+      const taskCell = row.insertCell();
+      taskCell.textContent = todo.task;
+      if (todo.completed) {
+        taskCell.classList.add('completed');
+      }
+
+      // 登録日
+      const dateCell = row.insertCell();
+      const formattedDate = new Date(todo.add_date).toLocaleDateString(); // 例：YYYY/MM/DD形式
+      dateCell.textContent = formattedDate
+
+      // 完了ボタン
+      const completeCell = row.insertCell();
+      const completeButton = document.createElement('button');
+      completeButton.textContent = '完了';
+      completeButton.addEventListener('click', () => completeTodo(todo.task_id, row)); // IDと行要素を渡す
+      completeCell.appendChild(completeButton);
+
+      // 削除ボタン
+      const deleteCell = row.insertCell();
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = '削除';
+      deleteButton.addEventListener('click', () => deleteTodo(todo.task_id, row)); // IDと行要素を渡す
+      deleteCell.appendChild(deleteButton);
+
+      // 変更ボタン
+      const updateCell = row.insertCell();
+      const updateButton = document.createElement('button');
+      updateButton.textContent = '編集';
+      updateButton.addEventListener('click', () => updateUICreate(todo.task, row)); // IDと行要素を渡す
+      updateCell.appendChild(updateButton);
+    });
+  }
+
+  // function updateUICreate(cell){
+//     const row = todoBody.insertRow();
+
+// // タスク名
+// const taskInputCell = row.insertCell();
+// const taskInput = document.createElement('input');
+// taskInput.type = 'text'
+// taskInput.id = 'new-task'
+// taskInput.classList.add('newTask')
+
+// if (currentEditCell) {
+//             closeEditInput();
+//         }
+
+//         currentEditCell = cell;
+
+// const editInputContainer = document.createElement('div');
+//         editInputContainer.classList.add('edit-input-container');
+
+//         // テキストエリアの作成
+//         const textarea = document.createElement('textarea');
+//         textarea.value = cell.textContent.trim(); // 現在のセルの内容をセット
+//         textarea.rows = 1; // 1行で開始
+//         editInputContainer.appendChild(textarea);
+
+//         // 更新ボタンの作成
+//         const saveButton = document.createElement('button');
+//         saveButton.textContent = '更新';
+//         saveButton.addEventListener('click', () => {
+//             cell.textContent = textarea.value;
+//             closeEditInput();
+//         });
+//         editInputContainer.appendChild(saveButton);
+
+//         // キャンセルボタンの作成
+//         const cancelButton = document.createElement('button');
+//         cancelButton.textContent = 'キャンセル';
+//         cancelButton.addEventListener('click', () => {
+//             closeEditInput();
+//         });
+//         editInputContainer.appendChild(cancelButton);
+
+// }
+
+  // タスクの完了/未完了を更新する関数（サーバーにリクエストを送信）
+    async function completeTodo(id, rowElement) {
+      
+    if (confirm('このタスクを完了しますか？')) {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString();
+      try {
+        const response = await  fetch('/api/todos/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ task_id: id ,complete_date:formattedDate})
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+        console.log(`タスクID ${id} を完了にしました。`);
+      } catch (error) {
+        console.error('タスクの更新に失敗しました:', error);
+        // エラー処理
+      }
+    }
+  }
+
+  // タスクを削除する関数（サーバーにリクエストを送信）
+  async function deleteTodo(id, rowElement) {
+    if (confirm('このタスクを削除しますか？')) {
+      try {
+        const response = await fetch('/api/todos/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ task_id: id})
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+        todoBody.removeChild(rowElement);
+        console.log(`タスクID ${id} を削除しました。`);
+      } catch (error) {
+        console.error('タスクの削除に失敗しました:', error);
+        // エラー処理
+      }
+    }
+  }
+
+    // タスクの内容を更新する関数（サーバーにリクエストを送信）
+    async function updateTodo(id, rowElement) {
+       
+      
+
+        try {
+          const response = await  fetch('/api/todos/complete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ task_id: id ,complete_date:formattedDate})
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+          console.log(`タスクID ${id} を完了にしました。`);
+        } catch (error) {
+          console.error('タスクの更新に失敗しました:', error);
+          // エラー処理
+        }
+      
+    }
+
+  // ページ読み込み時にToDoリストを読み込む
+  fetchTodos();
+  </script> -->
+  <script>
+    //     function addTodo() {
+    //   const today = new Date();
+    //   const formattedDate = today.toLocaleDateString();
+
+    //   const newTaskInput = document.getElementById('new-task');
+    //   const task = newTaskInput.value.trim();
+    //   if (task) {
+    //     fetch('/api/todos/add', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       },
+    //       body: JSON.stringify({ task: task ,date: formattedDate})
+    //     })
+    //       .then(response => response.json())
+    //       .then(data => {
+    //         newTaskInput.value = '';
+    //         fetchTodos()
+    //       });
+    //   }
+    // }
+   
+    document.addEventListener('DOMContentLoaded', () => {
+      const todoBody = document.getElementById('todo-body');
+      const addTodoButton = document.getElementById('task-add-button');
+
+
+    //   function addTodo() {
+    //   const today = new Date();
+    //   const formattedDate = today.toLocaleDateString();
+
+    //   const newTaskInput = document.getElementById('new-task');
+    //   const task = newTaskInput.value.trim();
+    //   if (task) {
+    //     fetch('/api/todos/add', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       },
+    //       body: JSON.stringify({ task: task ,date: formattedDate})
+    //     })
+    //       .then(response => response.json())
+    //       .then(data => {
+    //         newTaskInput.value = '';
+    //         fetchTodos()
+    //       });
+    //   }
+    // }
+      
+
+// サーバーからToDoデータを取得する関数
+async function fetchTodos() {
+  try {
+    const response = await fetch('/api/todos/get'); // サーバーのエンドポイント
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const todos = await response.json();
+    displayTodos(todos);
+  } catch (error) {
+    console.error('ToDoデータの取得に失敗しました:', error);
+    // エラー処理（例：エラーメッセージを表示）
+  }
+}
+    // ... 既存のコード ...
+
+    // グローバル変数として定義
+    let currentEditCell = null; // 現在編集中のセルを保持
+    let currentEditTaskId = null; // 現在編集中のタスクIDを保持
+
+
+    // 取得したToDoデータをテーブルに表示する関数
+    function displayTodos(todos) {
+        todoBody.innerHTML = ''; // 既存のデータをクリア
+
+        todos.forEach(todo => {
+            const row = todoBody.insertRow();
+
+            // タスク名
+            const taskCell = row.insertCell();
+            taskCell.textContent = todo.task;
+            // taskCellにカスタムデータ属性としてtask_idを設定
+            taskCell.dataset.taskId = todo.task_id; 
+            taskCell.dataset.taskName = todo.task; // currentEditTaskIdを取得するため
+            if (todo.completed) {
+                taskCell.classList.add('completed');
+            }
+
+            // 登録日
+            const dateCell = row.insertCell();
+            const formattedDate = new Date(todo.add_date).toLocaleDateString(); // 例：YYYY/MM/DD形式
+            dateCell.textContent = formattedDate
+
+            // 完了ボタン
+            const completeCell = row.insertCell();
+            const completeButton = document.createElement('button');
+            completeButton.textContent = '完了';
+            completeButton.addEventListener('click', () => completeTodo(todo.task_id, row)); // IDと行要素を渡す
+            completeCell.appendChild(completeButton);
+
+            // 削除ボタン
+            const deleteCell = row.insertCell();
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '削除';
+            deleteButton.addEventListener('click', () => deleteTodo(todo.task_id, row)); // IDと行要素を渡す
+            deleteCell.appendChild(deleteButton);
+
+            // 変更ボタン
+            const updateCell = row.insertCell();
+            const updateButton = document.createElement('button');
+            updateButton.textContent = '編集';
+            // 編集ボタンがクリックされたら、タスク名セル（taskCell）を渡すように変更
+            updateButton.addEventListener('click', () => updateUICreate(taskCell)); 
+            updateCell.appendChild(updateButton);
+        });
+    }
+
+    /**
+     * 指定されたセルに重ねて入力エリアを表示する関数
+     * @param {HTMLElement} cell クリックされた<td>要素 (タスク名セル)
+     */
+    function updateUICreate(cell) {
+        // 既に編集中のセルがある場合は、その編集をキャンセルする
+        if (currentEditCell) {
+            closeEditInput();
+        }
+
+        currentEditCell = cell; // 現在編集中のセルをセット
+        currentEditTaskId = cell.dataset.taskId; // セルからタスクIDを取得
+
+        // 入力エリアコンテナの作成
+        const editInputContainer = document.createElement('div');
+        editInputContainer.classList.add('edit-input-container');
+
+        // テキストエリアの作成
+        const textarea = document.createElement('textarea');
+        textarea.value = cell.textContent.trim(); // 現在のセルの内容をセット
+        editInputContainer.appendChild(textarea);
+
+        // ボタンを格納するdivを作成
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('buttons');
+
+        // 更新ボタンの作成
+        const saveButton = document.createElement('button');
+        saveButton.textContent = '更新';
+        saveButton.addEventListener('click', async () => {
+            const newText = textarea.value.trim();
+            if (newText && currentEditTaskId) {
+                // サーバーへの更新リクエスト
+                await updateTodo(currentEditTaskId, newText); 
+                cell.textContent = newText; // 画面上のセルを更新
+            }
+            closeEditInput();
+        });
+        buttonContainer.appendChild(saveButton);
+
+        // キャンセルボタンの作成
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'キャンセル';
+        cancelButton.addEventListener('click', () => {
+            closeEditInput();
+        });
+        buttonContainer.appendChild(cancelButton);
+
+        editInputContainer.appendChild(buttonContainer); // ボタンコンテナを入力エリアに追加
+
+        // テーブル要素の直下に追加 (position: relativeの親要素に追加)
+        const table = document.getElementById('todo-table'); // テーブル要素を取得
+        table.appendChild(editInputContainer);
+
+        // 入力エリアの位置とサイズをセルの位置とサイズに合わせる
+        const cellRect = cell.getBoundingClientRect(); // セルの位置とサイズを取得
+        const tableRect = table.getBoundingClientRect(); // テーブルの位置とサイズを取得
+
+        editInputContainer.style.top = `${cellRect.top - tableRect.top}px`;
+        editInputContainer.style.left = `${cellRect.left - tableRect.left}px`;
+        editInputContainer.style.width = `${cellRect.width}px`;
+        editInputContainer.style.height = `${cellRect.height}px`;
+        editInputContainer.style.display = 'flex'; // Flexboxで表示
+
+        textarea.focus(); // テキストエリアにフォーカスを当てる
+
+        // ESCキーでキャンセルできるようにする
+        const escKeyListener = (e) => {
+            if (e.key === 'Escape') {
+                closeEditInput();
+                document.removeEventListener('keydown', escKeyListener);
+            }
+        };
+        document.addEventListener('keydown', escKeyListener);
+    }
+
+    /**
+     * 入力エリアを非表示にし、編集状態を終了する関数
+     */
+    function closeEditInput() {
+        const existingContainer = document.querySelector('.edit-input-container');
+        if (existingContainer) {
+            existingContainer.remove();
+            currentEditCell = null;
+            currentEditTaskId = null;
+        }
+    }
+
+    async function addTodo() {
+      
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString();
+      const newTaskInput = document.getElementById('new-task');
+    const task = newTaskInput.value.trim();
+      try {
+        const response =  await fetch('/api/todos/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ task: task ,date:formattedDate})
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+        stateMassege(`タスクを登録しました。`)
+        console.log(`タスクを登録しました。`);
+      } catch (error) {
+        stateMassege('タスクの登録に失敗しました')
+        console.error('タスクの登録に失敗しました:', error);
+        // エラー処理
+      }
+    fetchTodos()
+  }
+
+  
+
+  addTodoButton.addEventListener('click', addTodo);
+
+     // タスクの完了/未完了を更新する関数（サーバーにリクエストを送信）
+     async function completeTodo(id, rowElement) {
+      
+      if (confirm('このタスクを完了しますか？')) {
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString();
+        try {
+          const response = await  fetch('/api/todos/complete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ task_id: id ,complete_date:formattedDate})
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+          stateMassege(`タスクID ${id} を完了にしました。`)
+          console.log(`タスクID ${id} を完了にしました。`);
+        } catch (error) {
+          stateMassege('タスクの更新に失敗しました')
+          console.error('タスクの更新に失敗しました:', error);
+          // エラー処理
+        }
+      }
+    }
+  
+    // タスクを削除する関数（サーバーにリクエストを送信）
+    async function deleteTodo(id, rowElement) {
+      if (confirm('このタスクを削除しますか？')) {
+        try {
+          const response = await fetch('/api/todos/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ task_id: id})
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+          todoBody.removeChild(rowElement);
+          stateMassege(`タスクID ${id} を削除しました。`)
+          console.log(`タスクID ${id} を削除しました。`);
+        } catch (error) {
+          stateMassege('タスクの削除に失敗しました')
+          console.error('タスクの削除に失敗しました:', error);
+          // エラー処理
+        }
+      }
+    }
+  
+
+    // タスクの内容を更新する関数（サーバーにリクエストを送信）
+    async function updateTodo(id, new_task_name) {
+        try {
+            const response = await fetch('/api/todos/update', { // 更新用の新しいエンドポイントを想定
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ task_id: id, task_name: new_task_name })
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            stateMassege(`タスクID ${id} を更新しました。`)
+            console.log(`タスクID ${id} を更新しました。`, data);
+            // 更新後、必要であればToDoリストを再取得して表示を更新
+            // fetchTodos(); 
+        } catch (error) {
+          stateMassege('タスクの更新に失敗しました')
+            console.error('タスクの更新に失敗しました:', error);
+            // エラー処理
+        }
+    }
+
+    // ページ読み込み時にToDoリストを読み込む
+    fetchTodos();
+});
+
+function stateMassege(text){
+  const messageArea = document.getElementById('state-message');
+  messageArea.textContent = text
+}
+  </script>
+</body>
+
+</html>

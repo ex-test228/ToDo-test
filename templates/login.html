@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>login sample</title>
+</head>
+
+<body>
+  <section>
+    <h1>ログイン画面</h1>
+    <p>IDとパスワードを入力してください</p>
+  </section>
+
+  <section>
+    <form id="loginForm">
+      <label>ID</label>
+      <input type="text" id="id">
+      <label>パスワード</label> <input type="password" id="password">
+      <p id="errorMessage"></p>
+      <input type="submit" onclick="login()">
+    </form>
+  </section>
+
+  <section>
+    <h2>初めての方</h2>
+
+      <label>名前</label>
+      <input type="text" id="new-name">
+      <label>パスワード</label> <input type="password" id="new-password">
+      <button onclick="addMember()">登録</button>
+
+  </section>
+
+  <script>
+     function addMember() {
+      const newMemberName = document.getElementById('new-name');
+      const newMemberPassword = document.getElementById('new-password');
+      const newName = newMemberName.value.trim();
+      const newPass = newMemberPassword.value.trim();
+      if (newName && newPass) {
+        fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: newName ,password: newPass})
+        })
+          .then(response => response.json())
+          .then(data => {
+            newMemberName.value = '';
+            newMemberPassword.value = '';
+          });
+      }
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    const errorMessage = document.getElementById('errorMessage');
+
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const id = document.getElementById('id').value;
+        const password = document.getElementById('password').value;
+
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: id, password: password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // ログイン成功
+            window.location.href = '/index'; // 遷移先のURL
+        } else {
+            // ログイン失敗
+            errorMessage.textContent = data.message || 'ログインに失敗しました。';
+        }
+    });
+
+  </script>
+</body>
+
+</html>
