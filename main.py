@@ -30,13 +30,13 @@ def execute_db(query, args=()):
     cursor.close()
     conn.close()
 
-# @app.route('/')
-# def index():
-#     return render_template('index.html')
-
 @app.route('/')
 def login():
     return render_template('login.html')
+
+@app.route('/regist')
+def regist():
+    return render_template('regist.html')
 
 @app.route('/api/todos/get', methods=['GET'])
 def get_todos():

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>regist page</title>
+</head>
+<body>
+  <section>
+    <h2>会員情報の登録</h2>
+
+      <label>名前</label>
+      <input type="text" id="new-name">
+      <label>パスワード</label> <input type="password" id="new-password">
+      <button onclick="addMember()">登録</button>
+
+  </section>
+
+  <script>
+        function addMember() {
+      const newMemberName = document.getElementById('new-name');
+      const newMemberPassword = document.getElementById('new-password');
+      const newName = newMemberName.value.trim();
+      const newPass = newMemberPassword.value.trim();
+      if (newName && newPass) {
+        fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: newName ,password: newPass})
+        })
+          .then(response => response.json())
+          .then(data => {
+            newMemberName.value = '';
+            newMemberPassword.value = '';
+          });
+      }
+    }
+
+  </script>
+</body>
+</html>

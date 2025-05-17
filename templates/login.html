@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>login sample</title>
+  <title>login page</title>
 </head>
 
 <body>
@@ -24,37 +24,16 @@
   </section>
 
   <section>
-    <h2>初めての方</h2>
-
-      <label>名前</label>
-      <input type="text" id="new-name">
-      <label>パスワード</label> <input type="password" id="new-password">
-      <button onclick="addMember()">登録</button>
-
+    <h2>会員登録していない場合</h2>
+    <form action="{{ url_for('regist') }}" method="get">
+      <button type="submit">登録画面へ</button>
+  </form>
   </section>
 
-  <script>
-     function addMember() {
-      const newMemberName = document.getElementById('new-name');
-      const newMemberPassword = document.getElementById('new-password');
-      const newName = newMemberName.value.trim();
-      const newPass = newMemberPassword.value.trim();
-      if (newName && newPass) {
-        fetch('/api/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ name: newName ,password: newPass})
-        })
-          .then(response => response.json())
-          .then(data => {
-            newMemberName.value = '';
-            newMemberPassword.value = '';
-          });
-      }
-    }
+ 
 
+  <script>
+ 
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
 
@@ -82,6 +61,7 @@
             errorMessage.textContent = data.message || 'ログインに失敗しました。';
         }
     });
+
 
   </script>
 </body>

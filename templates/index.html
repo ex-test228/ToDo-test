@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ToDo sample</title>
+  <title>main page</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
 </head>
 
@@ -16,7 +16,6 @@
   <button id="task-add-button">追加</button>
 
   <table id="todo-table">
-
     <thead>
       <tr>
         <th>タスク名</th>
@@ -26,7 +25,7 @@
       </tr>
     </thead>
     <tbody id="todo-body">
-      </tbody>
+    </tbody>
   </table>
 
   <section>
@@ -34,91 +33,89 @@
     <p id="state-message">待機中・・・</p>
   </section>
 
-  {% if session['user_id'] %}
-  <p>{{ session['user_id'] }}</p>
-  {% endif %}
+
 
   <script>
-   
+
     document.addEventListener('DOMContentLoaded', () => {
       const todoBody = document.getElementById('todo-body');
       const addTodoButton = document.getElementById('task-add-button');
 
-// サーバーからToDoデータを取得する関数
-async function fetchTodos() {
-  try {
-    const response = await fetch('/api/todos/get'); // サーバーのエンドポイント
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const todos = await response.json();
-    displayTodos(todos);
-  } catch (error) {
-    console.error('ToDoデータの取得に失敗しました:', error);
-    // エラー処理（例：エラーメッセージを表示）
-  }
-}
-    // ... 既存のコード ...
+      // サーバーからToDoデータを取得する関数
+      async function fetchTodos() {
+        try {
+          const response = await fetch('/api/todos/get'); // サーバーのエンドポイント
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const todos = await response.json();
+          displayTodos(todos);
+        } catch (error) {
+          console.error('ToDoデータの取得に失敗しました:', error);
+          // エラー処理（例：エラーメッセージを表示）
+        }
+      }
+      // ... 既存のコード ...
 
-    // グローバル変数として定義
-    let currentEditCell = null; // 現在編集中のセルを保持
-    let currentEditTaskId = null; // 現在編集中のタスクIDを保持
+      // グローバル変数として定義
+      let currentEditCell = null; // 現在編集中のセルを保持
+      let currentEditTaskId = null; // 現在編集中のタスクIDを保持
 
 
-    // 取得したToDoデータをテーブルに表示する関数
-    function displayTodos(todos) {
+      // 取得したToDoデータをテーブルに表示する関数
+      function displayTodos(todos) {
         todoBody.innerHTML = ''; // 既存のデータをクリア
 
         todos.forEach(todo => {
-            const row = todoBody.insertRow();
+          const row = todoBody.insertRow();
 
-            // タスク名
-            const taskCell = row.insertCell();
-            taskCell.textContent = todo.task;
-            // taskCellにカスタムデータ属性としてtask_idを設定
-            taskCell.dataset.taskId = todo.task_id; 
-            taskCell.dataset.taskName = todo.task; // currentEditTaskIdを取得するため
-            if (todo.completed) {
-                taskCell.classList.add('completed');
-            }
+          // タスク名
+          const taskCell = row.insertCell();
+          taskCell.textContent = todo.task;
+          // taskCellにカスタムデータ属性としてtask_idを設定
+          taskCell.dataset.taskId = todo.task_id;
+          taskCell.dataset.taskName = todo.task; // currentEditTaskIdを取得するため
+          if (todo.completed) {
+            taskCell.classList.add('completed');
+          }
 
-            // 登録日
-            const dateCell = row.insertCell();
-            const formattedDate = new Date(todo.add_date).toLocaleDateString(); // 例：YYYY/MM/DD形式
-            dateCell.textContent = formattedDate
+          // 登録日
+          const dateCell = row.insertCell();
+          const formattedDate = new Date(todo.add_date).toLocaleDateString(); // 例：YYYY/MM/DD形式
+          dateCell.textContent = formattedDate
 
-            // 完了ボタン
-            const completeCell = row.insertCell();
-            const completeButton = document.createElement('button');
-            completeButton.textContent = '完了';
-            completeButton.addEventListener('click', () => completeTodo(todo.task_id, row)); // IDと行要素を渡す
-            completeCell.appendChild(completeButton);
+          // 完了ボタン
+          const completeCell = row.insertCell();
+          const completeButton = document.createElement('button');
+          completeButton.textContent = '完了';
+          completeButton.addEventListener('click', () => completeTodo(todo.task_id, row)); // IDと行要素を渡す
+          completeCell.appendChild(completeButton);
 
-            // 削除ボタン
-            const deleteCell = row.insertCell();
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = '削除';
-            deleteButton.addEventListener('click', () => deleteTodo(todo.task_id, row)); // IDと行要素を渡す
-            deleteCell.appendChild(deleteButton);
+          // 削除ボタン
+          const deleteCell = row.insertCell();
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = '削除';
+          deleteButton.addEventListener('click', () => deleteTodo(todo.task_id, row)); // IDと行要素を渡す
+          deleteCell.appendChild(deleteButton);
 
-            // 変更ボタン
-            const updateCell = row.insertCell();
-            const updateButton = document.createElement('button');
-            updateButton.textContent = '編集';
-            // 編集ボタンがクリックされたら、タスク名セル（taskCell）を渡すように変更
-            updateButton.addEventListener('click', () => updateUICreate(taskCell)); 
-            updateCell.appendChild(updateButton);
+          // 変更ボタン
+          const updateCell = row.insertCell();
+          const updateButton = document.createElement('button');
+          updateButton.textContent = '編集';
+          // 編集ボタンがクリックされたら、タスク名セル（taskCell）を渡すように変更
+          updateButton.addEventListener('click', () => updateUICreate(taskCell));
+          updateCell.appendChild(updateButton);
         });
-    }
+      }
 
-    /**
-     * 指定されたセルに重ねて入力エリアを表示する関数
-     * @param {HTMLElement} cell クリックされた<td>要素 (タスク名セル)
-     */
-    function updateUICreate(cell) {
+      /**
+       * 指定されたセルに重ねて入力エリアを表示する関数
+       * @param {HTMLElement} cell クリックされた<td>要素 (タスク名セル)
+       */
+      function updateUICreate(cell) {
         // 既に編集中のセルがある場合は、その編集をキャンセルする
         if (currentEditCell) {
-            closeEditInput();
+          closeEditInput();
         }
 
         currentEditCell = cell; // 現在編集中のセルをセット
@@ -141,13 +138,13 @@ async function fetchTodos() {
         const saveButton = document.createElement('button');
         saveButton.textContent = '更新';
         saveButton.addEventListener('click', async () => {
-            const newText = textarea.value.trim();
-            if (newText && currentEditTaskId) {
-                // サーバーへの更新リクエスト
-                await updateTodo(currentEditTaskId, newText); 
-                cell.textContent = newText; // 画面上のセルを更新
-            }
-            closeEditInput();
+          const newText = textarea.value.trim();
+          if (newText && currentEditTaskId) {
+            // サーバーへの更新リクエスト
+            await updateTodo(currentEditTaskId, newText);
+            cell.textContent = newText; // 画面上のセルを更新
+          }
+          closeEditInput();
         });
         buttonContainer.appendChild(saveButton);
 
@@ -155,7 +152,7 @@ async function fetchTodos() {
         const cancelButton = document.createElement('button');
         cancelButton.textContent = 'キャンセル';
         cancelButton.addEventListener('click', () => {
-            closeEditInput();
+          closeEditInput();
         });
         buttonContainer.appendChild(cancelButton);
 
@@ -179,146 +176,146 @@ async function fetchTodos() {
 
         // ESCキーでキャンセルできるようにする
         const escKeyListener = (e) => {
-            if (e.key === 'Escape') {
-                closeEditInput();
-                document.removeEventListener('keydown', escKeyListener);
-            }
+          if (e.key === 'Escape') {
+            closeEditInput();
+            document.removeEventListener('keydown', escKeyListener);
+          }
         };
         document.addEventListener('keydown', escKeyListener);
-    }
+      }
 
-    /**
-     * 入力エリアを非表示にし、編集状態を終了する関数
-     */
-    function closeEditInput() {
+      /**
+       * 入力エリアを非表示にし、編集状態を終了する関数
+       */
+      function closeEditInput() {
         const existingContainer = document.querySelector('.edit-input-container');
         if (existingContainer) {
-            existingContainer.remove();
-            currentEditCell = null;
-            currentEditTaskId = null;
+          existingContainer.remove();
+          currentEditCell = null;
+          currentEditTaskId = null;
         }
-    }
-
-    async function addTodo() {
-      
-      const today = new Date();
-      const formattedDate = today.toLocaleDateString();
-      const newTaskInput = document.getElementById('new-task');
-    const task = newTaskInput.value.trim();
-      try {
-        const response =  await fetch('/api/todos/add', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ task: task ,date:formattedDate})
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        // サーバーでの削除が成功したら、クライアント側の表示から行を削除
-        stateMassege(`タスクを登録しました。`)
-        console.log(`タスクを登録しました。`);
-      } catch (error) {
-        stateMassege('タスクの登録に失敗しました')
-        console.error('タスクの登録に失敗しました:', error);
-        // エラー処理
       }
-    fetchTodos()
-  }
 
-  
+      async function addTodo() {
 
-  addTodoButton.addEventListener('click', addTodo);
-
-     // タスクの完了/未完了を更新する関数（サーバーにリクエストを送信）
-     async function completeTodo(id, rowElement) {
-      
-      if (confirm('このタスクを完了しますか？')) {
         const today = new Date();
         const formattedDate = today.toLocaleDateString();
+        const newTaskInput = document.getElementById('new-task');
+        const task = newTaskInput.value.trim();
         try {
-          const response = await  fetch('/api/todos/complete', {
+          const response = await fetch('/api/todos/add', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ task_id: id ,complete_date:formattedDate})
+            body: JSON.stringify({ task: task, date: formattedDate })
           });
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           // サーバーでの削除が成功したら、クライアント側の表示から行を削除
-          stateMassege(`タスクID ${id} を完了にしました。`)
-          console.log(`タスクID ${id} を完了にしました。`);
+          stateMassege(`タスクを登録しました。`)
+          console.log(`タスクを登録しました。`);
+        } catch (error) {
+          stateMassege('タスクの登録に失敗しました')
+          console.error('タスクの登録に失敗しました:', error);
+          // エラー処理
+        }
+        fetchTodos()
+      }
+
+
+
+      addTodoButton.addEventListener('click', addTodo);
+
+      // タスクの完了/未完了を更新する関数（サーバーにリクエストを送信）
+      async function completeTodo(id, rowElement) {
+
+        if (confirm('このタスクを完了しますか？')) {
+          const today = new Date();
+          const formattedDate = today.toLocaleDateString();
+          try {
+            const response = await fetch('/api/todos/complete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ task_id: id, complete_date: formattedDate })
+            });
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+            stateMassege(`タスクID ${id} を完了にしました。`)
+            console.log(`タスクID ${id} を完了にしました。`);
+          } catch (error) {
+            stateMassege('タスクの更新に失敗しました')
+            console.error('タスクの更新に失敗しました:', error);
+            // エラー処理
+          }
+        }
+      }
+
+      // タスクを削除する関数（サーバーにリクエストを送信）
+      async function deleteTodo(id, rowElement) {
+        if (confirm('このタスクを削除しますか？')) {
+          try {
+            const response = await fetch('/api/todos/delete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ task_id: id })
+            });
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            // サーバーでの削除が成功したら、クライアント側の表示から行を削除
+            todoBody.removeChild(rowElement);
+            stateMassege(`タスクID ${id} を削除しました。`)
+            console.log(`タスクID ${id} を削除しました。`);
+          } catch (error) {
+            stateMassege('タスクの削除に失敗しました')
+            console.error('タスクの削除に失敗しました:', error);
+            // エラー処理
+          }
+        }
+      }
+
+
+      // タスクの内容を更新する関数（サーバーにリクエストを送信）
+      async function updateTodo(id, new_task_name) {
+        try {
+          const response = await fetch('/api/todos/update', { // 更新用の新しいエンドポイントを想定
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ task_id: id, task_name: new_task_name })
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          stateMassege(`タスクID ${id} を更新しました。`)
+          console.log(`タスクID ${id} を更新しました。`, data);
+          // 更新後、必要であればToDoリストを再取得して表示を更新
+          // fetchTodos(); 
         } catch (error) {
           stateMassege('タスクの更新に失敗しました')
           console.error('タスクの更新に失敗しました:', error);
           // エラー処理
         }
       }
-    }
-  
-    // タスクを削除する関数（サーバーにリクエストを送信）
-    async function deleteTodo(id, rowElement) {
-      if (confirm('このタスクを削除しますか？')) {
-        try {
-          const response = await fetch('/api/todos/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ task_id: id})
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          // サーバーでの削除が成功したら、クライアント側の表示から行を削除
-          todoBody.removeChild(rowElement);
-          stateMassege(`タスクID ${id} を削除しました。`)
-          console.log(`タスクID ${id} を削除しました。`);
-        } catch (error) {
-          stateMassege('タスクの削除に失敗しました')
-          console.error('タスクの削除に失敗しました:', error);
-          // エラー処理
-        }
-      }
-    }
-  
 
-    // タスクの内容を更新する関数（サーバーにリクエストを送信）
-    async function updateTodo(id, new_task_name) {
-        try {
-            const response = await fetch('/api/todos/update', { // 更新用の新しいエンドポイントを想定
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ task_id: id, task_name: new_task_name })
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            stateMassege(`タスクID ${id} を更新しました。`)
-            console.log(`タスクID ${id} を更新しました。`, data);
-            // 更新後、必要であればToDoリストを再取得して表示を更新
-            // fetchTodos(); 
-        } catch (error) {
-          stateMassege('タスクの更新に失敗しました')
-            console.error('タスクの更新に失敗しました:', error);
-            // エラー処理
-        }
+      // ページ読み込み時にToDoリストを読み込む
+      fetchTodos();
+    });
+
+    function stateMassege(text) {
+      const messageArea = document.getElementById('state-message');
+      messageArea.textContent = text
     }
-
-    // ページ読み込み時にToDoリストを読み込む
-    fetchTodos();
-});
-
-function stateMassege(text){
-  const messageArea = document.getElementById('state-message');
-  messageArea.textContent = text
-}
   </script>
 </body>
 
