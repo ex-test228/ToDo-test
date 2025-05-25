@@ -9,12 +9,15 @@
 </head>
 
 <body>
-  <h1>TODO リスト</h1>
+  <h1>TODO リスト サンプル</h1>
 
+  <section class="add-todo">
   <h2>新しい TODO を追加</h2>
   <input type="text" id="new-task">
   <button id="task-add-button">追加</button>
+</section>
 
+<section class="todo-table">
   <table id="todo-table">
     <thead>
       <tr>
@@ -27,6 +30,7 @@
     <tbody id="todo-body">
     </tbody>
   </table>
+</section>
 
   <section>
     <h2>状態表示</h2>
@@ -86,16 +90,21 @@
 
           // 完了ボタン
           const completeCell = row.insertCell();
+          if(todo.complete_date){
+          const formattedDateComplete = new Date(todo.complete_date).toLocaleDateString();
+          completeCell.textContent = formattedDateComplete;
+          }else{
           const completeButton = document.createElement('button');
           completeButton.textContent = '完了';
-          completeButton.addEventListener('click', () => completeTodo(todo.task_id, row)); // IDと行要素を渡す
+          completeButton.addEventListener('click', () => completeTodo(todo.task_id, row,todo.task)); // IDと行要素を渡す
           completeCell.appendChild(completeButton);
+          }
 
           // 削除ボタン
           const deleteCell = row.insertCell();
           const deleteButton = document.createElement('button');
           deleteButton.textContent = '削除';
-          deleteButton.addEventListener('click', () => deleteTodo(todo.task_id, row)); // IDと行要素を渡す
+          deleteButton.addEventListener('click', () => deleteTodo(todo.task, row,todo.task)); // IDと行要素を渡す
           deleteCell.appendChild(deleteButton);
 
           // 変更ボタン
@@ -229,7 +238,7 @@
       addTodoButton.addEventListener('click', addTodo);
 
       // タスクの完了/未完了を更新する関数（サーバーにリクエストを送信）
-      async function completeTodo(id, rowElement) {
+      async function completeTodo(id, rowElement,name) {
 
         if (confirm('このタスクを完了しますか？')) {
           const today = new Date();
@@ -246,18 +255,19 @@
               throw new Error(`HTTP error! status: ${response.status}`);
             }
             // サーバーでの削除が成功したら、クライアント側の表示から行を削除
-            stateMassege(`タスクID ${id} を完了にしました。`)
-            console.log(`タスクID ${id} を完了にしました。`);
+            stateMassege(`タスクID ${name} を完了にしました。`)
+            console.log(`タスクID ${name} を完了にしました。`);
           } catch (error) {
             stateMassege('タスクの更新に失敗しました')
             console.error('タスクの更新に失敗しました:', error);
             // エラー処理
           }
         }
+        fetchTodos()
       }
 
       // タスクを削除する関数（サーバーにリクエストを送信）
-      async function deleteTodo(id, rowElement) {
+      async function deleteTodo(id, rowElement,name) {
         if (confirm('このタスクを削除しますか？')) {
           try {
             const response = await fetch('/api/todos/delete', {
@@ -272,8 +282,8 @@
             }
             // サーバーでの削除が成功したら、クライアント側の表示から行を削除
             todoBody.removeChild(rowElement);
-            stateMassege(`タスクID ${id} を削除しました。`)
-            console.log(`タスクID ${id} を削除しました。`);
+            stateMassege(`タスク ${name} を削除しました。`)
+            console.log(`タスク ${name} を削除しました。`);
           } catch (error) {
             stateMassege('タスクの削除に失敗しました')
             console.error('タスクの削除に失敗しました:', error);
@@ -297,8 +307,8 @@
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const data = await response.json();
-          stateMassege(`タスクID ${id} を更新しました。`)
-          console.log(`タスクID ${id} を更新しました。`, data);
+          stateMassege(`タスクを更新しました。`)
+          console.log(`タスクを更新しました。`, data);
           // 更新後、必要であればToDoリストを再取得して表示を更新
           // fetchTodos(); 
         } catch (error) {

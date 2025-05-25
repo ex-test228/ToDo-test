@@ -1,7 +1,7 @@
 import os
 from flask import Flask, redirect, render_template, request, jsonify, session, url_for
 import sqlite3
-import bcrypt # type: ignore
+import bcrypt 
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -41,7 +41,7 @@ def regist():
 @app.route('/api/todos/get', methods=['GET'])
 def get_todos():
     user_id = session['user_id']
-    todos = query_db('SELECT task_id,task,complete,add_date FROM todos WHERE user_id = ?',(user_id,))
+    todos = query_db('SELECT task_id,task,complete,add_date,complete_date FROM todos WHERE user_id = ?',(user_id,))
     return jsonify([dict(row) for row in todos])
 
 @app.route('/api/todos/add', methods=['POST'])
@@ -104,7 +104,7 @@ def add_member():
     # ハッシュ値とソルトをデータベースに保存 (例: user テーブルの password_hash, salt カラム)
         try:
             execute_db('UPDATE users SET password_hash = ?, salt = ? WHERE name = ?', (hashed_password, salt.decode('utf-8'), name)) # user_id は仮の値
-            return jsonify({'message': 'パスワードが安全に保存されました'}), 200
+            return jsonify({'message': ''}), 200
         except sqlite3.Error as e:
             return jsonify({'error': f'データベースエラー: {str(e)}'}), 500
         
