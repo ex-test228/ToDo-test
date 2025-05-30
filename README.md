@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ディレクトリの移動
 ```
-cd clad_tool/python_flask
+cd ToDo-test/python_flask
 ```
 
 実行  
