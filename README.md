@@ -11,14 +11,14 @@ flask
 git clone https://github.com/ex-test228/ToDo-test.git
 ```
 
-依存関係のインストール
-```
-pip install -r requirements.txt
-```
-
 ディレクトリの移動
 ```
 cd ToDo-test
+```
+
+依存関係のインストール
+```
+pip install -r requirements.txt
 ```
 
 実行  
